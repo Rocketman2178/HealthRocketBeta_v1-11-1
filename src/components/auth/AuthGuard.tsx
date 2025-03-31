@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useSupabase } from '../../contexts/SupabaseContext';
 import { OnboardingFlow } from '../onboarding/OnboardingFlow';
 import { AuthForm } from './AuthForm';
@@ -7,7 +7,13 @@ import { useUser } from '../../hooks/useUser';
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useSupabase();
   const { userData, userLoading } = useUser(user?.id);
-  
+
+  useEffect(() => {
+    if (user && window.ReactNativeWebView) {
+      window.ReactNativeWebView.postMessage(JSON.stringify(user));
+    }
+  }, [user]);
+
   // Show loading state while checking auth
   if (loading || userLoading) {
     return (
@@ -26,7 +32,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   if (!userData?.onboarding_completed) {
     return <OnboardingFlow />;
   }
-
   // Show main content for authenticated users
   return children;
 }
