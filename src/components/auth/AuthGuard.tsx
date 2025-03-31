@@ -1,18 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useSupabase } from '../../contexts/SupabaseContext';
 import { OnboardingFlow } from '../onboarding/OnboardingFlow';
 import { AuthForm } from './AuthForm';
 import { useUser } from '../../hooks/useUser';
-import { User } from '@supabase/supabase-js';
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useSupabase();
   const { userData, userLoading } = useUser(user?.id);
-  function sendUserToNativeApp(user:User) {
-    if (window.ReactNativeWebView) {
+
+  useEffect(() => {
+    if (user && window.ReactNativeWebView) {
       window.ReactNativeWebView.postMessage(JSON.stringify(user));
     }
-  }
+  }, [user]);
+
   // Show loading state while checking auth
   if (loading || userLoading) {
     return (
@@ -31,7 +32,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   if (!userData?.onboarding_completed) {
     return <OnboardingFlow />;
   }
-  sendUserToNativeApp(user);
   // Show main content for authenticated users
   return children;
 }
